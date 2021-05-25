@@ -1,6 +1,7 @@
 using Dilemma.DAL.Context;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -28,7 +29,8 @@ namespace Dilemma.Web
             });
 
             services.AddMemoryCache();
-            services.AddDbContext<DilemmaDbContext>();
+            services.AddDbContext<DilemmaDbContext>(options => 
+                options.UseNpgsql(Configuration["ConnectionStrings:DilemmaDbContext"]));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
