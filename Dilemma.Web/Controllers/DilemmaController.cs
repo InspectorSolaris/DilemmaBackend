@@ -1,6 +1,7 @@
 ﻿using Dilemma.Common.Dtos;
 using Dilemma.DAL.Context;
 using Dilemma.DAL.Models;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -22,17 +23,21 @@ namespace Dilemma.Web.Controllers
 
         private readonly IConfiguration _configuration;
 
+        private readonly IWebHostEnvironment _webHostEnvironment;
+
         public DilemmaController(
             DilemmaDbContext context,
             IMemoryCache cache,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
             _cache = cache;
             _configuration = configuration;
+            _webHostEnvironment = webHostEnvironment;
         }
 
-        [HttpGet]
+        [HttpGet("test")]
         public async Task<IActionResult> Test()
         {
             var dilemmas = _context.Dilemmas
@@ -60,7 +65,7 @@ namespace Dilemma.Web.Controllers
             });
         }
 
-        [HttpGet]
+        [HttpGet("statistics")]
         public async Task<IActionResult> Statistics()
         {
             return new JsonResult(await _cache.GetOrCreateAsync(nameof(Statistics), async entry =>
@@ -81,8 +86,8 @@ namespace Dilemma.Web.Controllers
             }));
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Answers(IEnumerable<Guid> solutionsIds)
+        [HttpPost("answers")]
+        public async Task<IActionResult> Answers([FromBody] IEnumerable<Guid> solutionsIds)
         {
             var unprocessedIds = new List<Guid>();
 
@@ -106,6 +111,22 @@ namespace Dilemma.Web.Controllers
             }
 
             return new JsonResult(unprocessedIds);
+        }
+
+        [HttpGet("solution-image/{id}")]
+        public async Task<IActionResult> SolutionImage([FromQuery] Guid solutionId)
+        {
+            var solution = await _context.Solutions.FirstOrDefaultAsync(x => x.Id == solutionId);
+
+            if (solution == null)
+            {
+                return NotFound();
+            }
+
+            var path = $"{_webHostEnvironment.WebRootPath}\\{_configuration["Path:Images"]}\\{solution.Image}";
+            var stream = System.IO.File.OpenRead(path);
+
+            return File(stream, "image/jpeg");
         }
     }
 }
