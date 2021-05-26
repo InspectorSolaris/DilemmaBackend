@@ -58,6 +58,8 @@ namespace Dilemma.BL.Services
                     Id = Guid.NewGuid(),
                     Date = statisticsDateTime
                 };
+
+                await _context.AddAsync(statistics);
             }
 
             var answers = _context.Answers
@@ -99,13 +101,15 @@ namespace Dilemma.BL.Services
         {
             await Update();
 
-            return await _context.Statistics
+            var ans = await _context.Statistics
                 .Select(x => new StatisticsDto()
                 {
                     Date = x.Date,
                     Rate = x.Rate
                 })
-                .ToListAsync(); ;
+                .ToListAsync();
+
+            return ans;
         }
 
         private async Task<double> CalculateAnswersMeanRate(IQueryable<Answer> answers, DateTimeOffset minDate, DateTimeOffset maxDate)
