@@ -117,10 +117,10 @@ namespace Dilemma.BL.Services
         {
             var query = answers.Where(x => minDate <= x.Date && x.Date <= maxDate);
 
-            var sum = query.SumAsync(x => x.Solution.Rate);
-            var count = query.CountAsync();
+            var sum = await query.SumAsync(x => x.Solution.Rate);
+            var count = await query.CountAsync();
 
-            return await sum / await count;
+            return sum / count;
         }
     }
 }

@@ -43,7 +43,7 @@ namespace Dilemma.Web.Controllers
         [HttpGet("test")]
         public async Task<IActionResult> Test()
         {
-            var dilemmas = _context.Dilemmas
+            var dilemmas = await _context.Dilemmas
                 .Select(x => new DilemmaDto()
                 {
                     Id = x.Id,
@@ -51,7 +51,7 @@ namespace Dilemma.Web.Controllers
                 })
                 .ToListAsync();
 
-            var solutions = _context.Solutions
+            var solutions = await _context.Solutions
                 .Select(x => new SolutionDto()
                 {
                     Id = x.Id,
@@ -63,8 +63,8 @@ namespace Dilemma.Web.Controllers
 
             return new JsonResult(new TestDto()
             {
-                Dilemmas = await dilemmas,
-                Solutions = await solutions
+                Dilemmas = dilemmas,
+                Solutions = solutions
             });
         }
 
