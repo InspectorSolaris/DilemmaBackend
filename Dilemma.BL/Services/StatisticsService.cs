@@ -97,20 +97,15 @@ namespace Dilemma.BL.Services
 
         public async Task<IEnumerable<StatisticsDto>> Get()
         {
-            return await _cache.GetOrCreateAsync<IEnumerable<StatisticsDto>>("GetStatistics", async entry =>
-            {
-                entry.AbsoluteExpirationRelativeToNow = new TimeSpan(int.Parse(_configuration["Statistics:ExpirationHours"]), 0, 0);
+            await Update();
 
-                await Update();
-
-                return await _context.Statistics
-                    .Select(x => new StatisticsDto()
-                    {
-                        Date = x.Date,
-                        Rate = x.Rate
-                    })
-                    .ToListAsync();
-            });
+            return await _context.Statistics
+                .Select(x => new StatisticsDto()
+                {
+                    Date = x.Date,
+                    Rate = x.Rate
+                })
+                .ToListAsync(); ;
         }
 
         private async Task<double> CalculateAnswersMeanRate(IQueryable<Answer> answers, DateTimeOffset minDate, DateTimeOffset maxDate)
