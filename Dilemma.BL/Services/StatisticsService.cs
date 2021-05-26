@@ -32,7 +32,10 @@ namespace Dilemma.BL.Services
 
         public async Task Update()
         {
-            var statisticsDeltaHours = int.Parse(_configuration["Statistics:StepHours"]);
+            var statisticsDelta = new TimeSpan(
+                int.Parse(_configuration["Statistics:StepHours"]),
+                int.Parse(_configuration["Statistics:StepMinutes"]),
+                int.Parse(_configuration["Statistics:StepSeconds"]));
             var statistics = _context.Statistics
                 .OrderByDescending(x => x.Date)
                 .FirstOrDefault();
@@ -72,12 +75,12 @@ namespace Dilemma.BL.Services
                 .AddMinutes(-start.Minute)
                 .AddSeconds(-start.Second)
                 .AddMilliseconds(-start.Millisecond);
-            var maxDateTime = minDateTime.AddHours(statisticsDeltaHours);
+            var maxDateTime = minDateTime.Add(statisticsDelta);
 
             statistics.Rate = await CalculateAnswersMeanRate(answers, minDateTime, maxDateTime);
 
-            minDateTime = minDateTime.AddHours(statisticsDeltaHours);
-            maxDateTime = maxDateTime.AddHours(statisticsDeltaHours);
+            minDateTime = minDateTime.Add(statisticsDelta);
+            maxDateTime = maxDateTime.Add(statisticsDelta);
 
             while (maxDateTime <= DateTimeOffset.UtcNow)
             {
@@ -90,8 +93,8 @@ namespace Dilemma.BL.Services
 
                 await _context.AddAsync(statisticsNew);
 
-                minDateTime = minDateTime.AddHours(statisticsDeltaHours);
-                maxDateTime = maxDateTime.AddHours(statisticsDeltaHours);
+                minDateTime = minDateTime.Add(statisticsDelta);
+                maxDateTime = maxDateTime.Add(statisticsDelta);
             }
 
             await _context.SaveChangesAsync();
@@ -99,17 +102,23 @@ namespace Dilemma.BL.Services
 
         public async Task<IEnumerable<StatisticsDto>> Get()
         {
-            await Update();
+            return await _cache.GetOrCreateAsync("statistics", async entry =>
+            {
+                entry.AbsoluteExpirationRelativeToNow = new TimeSpan(
+                    int.Parse(_configuration["Statistics:ExpirationHours"]),
+                    int.Parse(_configuration["Statistics:ExpirationMinutes"]),
+                    int.Parse(_configuration["Statistics:ExpirationSeconds"]));
 
-            var ans = await _context.Statistics
-                .Select(x => new StatisticsDto()
-                {
-                    Date = x.Date,
-                    Rate = x.Rate
-                })
-                .ToListAsync();
+                await Update();
 
-            return ans;
+                return await _context.Statistics
+                    .Select(x => new StatisticsDto()
+                    {
+                        Date = x.Date,
+                        Rate = x.Rate
+                    })
+                    .ToListAsync();
+            });
         }
 
         private async Task<double> CalculateAnswersMeanRate(IQueryable<Answer> answers, DateTimeOffset minDate, DateTimeOffset maxDate)
