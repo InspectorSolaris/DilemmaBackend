@@ -1,7 +1,8 @@
-using Dilemma.DAL.Context;
+using Dilemma.BL.Services;
+using Dilemma.Common.Interfaces;
+using Dilemma.Web.Configuration;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -13,10 +14,10 @@ namespace Dilemma.Web
     {
         public Startup(IConfiguration configuration)
         {
-            Configuration = configuration;
+            _configuration = configuration;
         }
 
-        public IConfiguration Configuration { get; }
+        public readonly IConfiguration _configuration;
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
@@ -29,8 +30,11 @@ namespace Dilemma.Web
             });
 
             services.AddMemoryCache();
-            services.AddDbContext<DilemmaDbContext>(options => 
-                options.UseNpgsql(Configuration["ConnectionStrings:DilemmaDbContext"]));
+
+            services.ConfigureDAL(_configuration);
+
+            services.AddTransient<IStatisticsService, StatisticsService>();
+            services.AddTransient<IAnswerService, AnswerService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

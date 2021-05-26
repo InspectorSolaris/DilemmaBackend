@@ -1,10 +1,9 @@
 ﻿using Dilemma.Common.Dtos;
+using Dilemma.Common.Interfaces;
 using Dilemma.DAL.Context;
-using Dilemma.DAL.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -19,22 +18,26 @@ namespace Dilemma.Web.Controllers
     {
         private readonly DilemmaDbContext _context;
 
-        private readonly IMemoryCache _cache;
+        private readonly IStatisticsService _statisticsService;
 
-        private readonly IConfiguration _configuration;
+        private readonly IAnswerService _answerService;
 
         private readonly IWebHostEnvironment _webHostEnvironment;
 
+        private readonly IConfiguration _configuration;
+
         public DilemmaController(
             DilemmaDbContext context,
-            IMemoryCache cache,
-            IConfiguration configuration,
-            IWebHostEnvironment webHostEnvironment)
+            IStatisticsService statisticsService,
+            IAnswerService answerService,
+            IWebHostEnvironment webHostEnvironment,
+            IConfiguration configuration)
         {
             _context = context;
-            _cache = cache;
-            _configuration = configuration;
+            _statisticsService = statisticsService;
+            _answerService = answerService;
             _webHostEnvironment = webHostEnvironment;
+            _configuration = configuration;
         }
 
         [HttpGet("test")]
@@ -68,53 +71,17 @@ namespace Dilemma.Web.Controllers
         [HttpGet("statistics")]
         public async Task<IActionResult> Statistics()
         {
-            return new JsonResult(await _cache.GetOrCreateAsync(nameof(Statistics), async entry =>
-            {
-                entry.AbsoluteExpirationRelativeToNow = new TimeSpan(
-                    int.Parse(_configuration["Statistics:ExpirationHours"]),
-                    int.Parse(_configuration["Statistics:ExpirationMinutes"]),
-                    int.Parse(_configuration["Statistics:ExpirationSeconds"]));
-
-                var sum = _context.Answers.SumAsync(x => x.Solution.Rate);
-                var count = _context.Answers.CountAsync();
-
-                return new StatisticsDto()
-                {
-                    Date = DateTimeOffset.UtcNow,
-                    Rate = await sum / await count
-                };
-            }));
+            return new JsonResult(await _statisticsService.Get());
         }
 
         [HttpPost("answers")]
         public async Task<IActionResult> Answers([FromBody] IEnumerable<Guid> solutionsIds)
         {
-            var unprocessedIds = new List<Guid>();
-
-            foreach (var id in solutionsIds)
-            {
-                if (await _context.Solutions.AnyAsync(x => x.Id == id))
-                {
-                    await _context.AddAsync(new Answer()
-                    {
-                        Id = Guid.NewGuid(),
-                        SolutionId = id,
-                        CreationDate = DateTimeOffset.UtcNow
-                    });
-                }
-                else
-                {
-                    unprocessedIds.Add(id);
-                }
-
-                await _context.SaveChangesAsync();
-            }
-
-            return new JsonResult(unprocessedIds);
+            return new JsonResult(await _answerService.ProcessNewAnswersAsync(solutionsIds));
         }
 
         [HttpGet("solution-image/{id}")]
-        public async Task<IActionResult> SolutionImage([FromQuery] Guid solutionId)
+        public async Task<IActionResult> SolutionImage([FromRoute(Name = "id")] Guid solutionId)
         {
             var solution = await _context.Solutions.FirstOrDefaultAsync(x => x.Id == solutionId);
 

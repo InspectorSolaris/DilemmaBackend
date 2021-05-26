@@ -10,6 +10,6 @@ namespace Dilemma.DAL.Models
 
         public Solution Solution { get; set; }
 
-        public DateTimeOffset CreationDate { get; set; }
+        public DateTimeOffset Date { get; set; }
     }
 }
