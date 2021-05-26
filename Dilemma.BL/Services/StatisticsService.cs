@@ -128,7 +128,7 @@ namespace Dilemma.BL.Services
             var sum = await query.SumAsync(x => x.Solution.Rate);
             var count = await query.CountAsync();
 
-            return sum / count;
+            return count != 0 ? sum / count : 0;
         }
     }
 }
