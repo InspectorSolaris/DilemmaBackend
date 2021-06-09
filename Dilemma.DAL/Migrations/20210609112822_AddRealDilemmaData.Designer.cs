@@ -3,15 +3,17 @@ using System;
 using Dilemma.DAL.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Dilemma.DAL.Migrations
 {
     [DbContext(typeof(DilemmaDbContext))]
-    partial class DilemmaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20210609112822_AddRealDilemmaData")]
+    partial class AddRealDilemmaData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -70,7 +70,7 @@ namespace Dilemma.DAL.Context
 
             var min = 0.3;
             var max = 0.9;
-            var random = new Random();
+            var random = new Random(1337);
 
             double GetRate()
             {
