@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -90,7 +91,7 @@ namespace Dilemma.Web.Controllers
                 return NotFound();
             }
 
-            var path = $"{_webHostEnvironment.WebRootPath}\\{_configuration["Path:Images"]}\\{solution.Image}";
+            var path = $"{_webHostEnvironment.WebRootPath}{Path.DirectorySeparatorChar}{_configuration["Path:Images"]}{Path.DirectorySeparatorChar}{solution.Image}";
             var stream = System.IO.File.OpenRead(path);
 
             return File(stream, "image/jpeg");
