@@ -51,6 +51,12 @@ namespace Dilemma.Web
 
             app.UseRouting();
 
+            app.UseCors(builder => builder
+                .WithOrigins("https://hits-moral-machine.herokuapp.com")
+                .AllowCredentials()
+                .AllowAnyMethod()
+                .AllowAnyHeader());
+
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
