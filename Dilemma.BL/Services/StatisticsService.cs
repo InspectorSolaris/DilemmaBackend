@@ -48,7 +48,7 @@ namespace Dilemma.BL.Services
             if (statistics == null)
             {
                 var firstAnswer = _context.Answers
-                    .OrderByDescending(x => x.Date)
+                    .OrderBy(x => x.Date)
                     .FirstOrDefault();
 
                 if (firstAnswer == null)
@@ -117,6 +117,7 @@ namespace Dilemma.BL.Services
                 await Update();
 
                 return await _context.Statistics
+                    .OrderBy(x => x.Date)
                     .Select(x => new StatisticsDto()
                     {
                         Date = x.Date,
