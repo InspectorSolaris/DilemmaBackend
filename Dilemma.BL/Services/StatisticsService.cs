@@ -32,10 +32,15 @@ namespace Dilemma.BL.Services
 
         public async Task Update()
         {
-            var statisticsDelta = new TimeSpan(
+            var statisticsStep = new TimeSpan(
                 int.Parse(_configuration["Statistics:StepHours"]),
                 int.Parse(_configuration["Statistics:StepMinutes"]),
                 int.Parse(_configuration["Statistics:StepSeconds"]));
+            var statisticsDelta = new TimeSpan(
+                int.Parse(_configuration["Statistics:DeltaHours"]),
+                int.Parse(_configuration["Statistics:DeltaMinutes"]),
+                int.Parse(_configuration["Statistics:DeltaSeconds"]));
+
             var statistics = _context.Statistics
                 .OrderByDescending(x => x.Date)
                 .FirstOrDefault();
@@ -79,8 +84,8 @@ namespace Dilemma.BL.Services
 
             statistics.Rate = await CalculateAnswersMeanRate(answers, minDateTime, maxDateTime);
 
-            minDateTime = minDateTime.Add(statisticsDelta);
-            maxDateTime = maxDateTime.Add(statisticsDelta);
+            minDateTime = minDateTime.Add(statisticsStep);
+            maxDateTime = maxDateTime.Add(statisticsStep);
 
             while (maxDateTime <= DateTimeOffset.UtcNow)
             {
@@ -93,8 +98,8 @@ namespace Dilemma.BL.Services
 
                 await _context.AddAsync(statisticsNew);
 
-                minDateTime = minDateTime.Add(statisticsDelta);
-                maxDateTime = maxDateTime.Add(statisticsDelta);
+                minDateTime = minDateTime.Add(statisticsStep);
+                maxDateTime = maxDateTime.Add(statisticsStep);
             }
 
             await _context.SaveChangesAsync();
