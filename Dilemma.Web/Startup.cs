@@ -52,7 +52,7 @@ namespace Dilemma.Web
             app.UseRouting();
 
             app.UseCors(builder => builder
-                .WithOrigins("https://hits-moral-machine.herokuapp.com")
+                .WithOrigins("https://hits-moral-machine.herokuapp.com", "http://194.87.69.217:3000")
                 .AllowCredentials()
                 .AllowAnyMethod()
                 .AllowAnyHeader());
